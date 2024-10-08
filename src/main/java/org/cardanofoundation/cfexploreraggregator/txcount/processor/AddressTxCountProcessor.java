@@ -1,34 +1,32 @@
 package org.cardanofoundation.cfexploreraggregator.txcount.processor;
 
-import com.bloxbean.cardano.yaci.core.model.byron.ByronTx;
-import com.bloxbean.cardano.yaci.core.model.byron.ByronTxOut;
-import com.bloxbean.cardano.yaci.helper.model.Utxo;
-import com.bloxbean.cardano.yaci.store.events.BlockEvent;
-import com.bloxbean.cardano.yaci.store.events.ByronEbBlockEvent;
-import com.bloxbean.cardano.yaci.store.events.ByronMainBlockEvent;
-import com.bloxbean.cardano.yaci.store.events.RollbackEvent;
-import com.bloxbean.cardano.yaci.store.events.TransactionEvent;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.cardanofoundation.cfexploreraggregator.txcount.model.entity.AddressTxCountEntity;
-import org.cardanofoundation.cfexploreraggregator.txcount.model.repository.AddressTxCountRepository;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import com.bloxbean.cardano.yaci.core.model.byron.ByronTx;
+import com.bloxbean.cardano.yaci.core.model.byron.ByronTxOut;
+import com.bloxbean.cardano.yaci.helper.model.Utxo;
+import com.bloxbean.cardano.yaci.store.events.ByronMainBlockEvent;
+import com.bloxbean.cardano.yaci.store.events.RollbackEvent;
+import com.bloxbean.cardano.yaci.store.events.TransactionEvent;
+
+import org.cardanofoundation.cfexploreraggregator.txcount.model.entity.AddressTxCountEntity;
+import org.cardanofoundation.cfexploreraggregator.txcount.model.repository.AddressTxCountRepository;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(
         prefix = "explorer.aggregation",
-        name = "addressTxCount",
+        name = "ddressTxCount-enabled",
         havingValue = "true"
 )
 public class AddressTxCountProcessor {
