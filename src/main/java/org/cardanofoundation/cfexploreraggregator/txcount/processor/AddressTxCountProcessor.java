@@ -26,7 +26,7 @@ import org.cardanofoundation.cfexploreraggregator.txcount.model.repository.Addre
 @Slf4j
 @ConditionalOnProperty(
         prefix = "explorer.aggregation",
-        name = "ddressTxCount-enabled",
+        name = "addressTxCount-enabled",
         havingValue = "true"
 )
 public class AddressTxCountProcessor {
