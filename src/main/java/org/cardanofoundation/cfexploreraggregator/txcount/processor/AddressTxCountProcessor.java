@@ -2,6 +2,9 @@ package org.cardanofoundation.cfexploreraggregator.txcount.processor;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -33,7 +36,10 @@ public class AddressTxCountProcessor {
 
     private final AddressTxCountRepository addressTxCountRepository;
 
+    private ConcurrentHashMap<String, Lock> addressLocks = new ConcurrentHashMap<>();
+
     @EventListener
+    @Transactional
     public void handleTransactionEvent(TransactionEvent event) {
         event.getTransactions().forEach(tx -> {
             Set<String> addresses = tx.getUtxos().stream().map(Utxo::getAddress).collect(Collectors.toSet());
@@ -45,6 +51,7 @@ public class AddressTxCountProcessor {
     }
 
     @EventListener
+    @Transactional
     public void handleByronEvent(ByronMainBlockEvent event) {
         List<ByronTx> byronTxList = event.getByronMainBlock().getBody().getTxPayload()
                 .stream()
@@ -55,11 +62,10 @@ public class AddressTxCountProcessor {
                 processTransaction(event.getMetadata().getSlot(), output.getAddress().getBase58Raw());
             });
         });
-
     }
 
     private void processTransaction(long slot, String address) {
-        List<AddressTxCountEntity> byAddressOrderBySlotDesc = addressTxCountRepository.findByAddressOrderBySlotDesc(address);
+        List<AddressTxCountEntity> byAddressOrderBySlotDesc = addressTxCountRepository.findByAddressOrderByTxCountDesc(address);
         if(byAddressOrderBySlotDesc.isEmpty()){
             AddressTxCountEntity addressTxCountEntity = AddressTxCountEntity.builder()
                     .address(address)
@@ -73,11 +79,39 @@ public class AddressTxCountProcessor {
         addressTxCountEntity.setTxCount(addressTxCountEntity.getTxCount() + 1);
         addressTxCountRepository.save(addressTxCountEntity);
 
-        // clean up process
-        if(slot - byAddressOrderBySlotDesc.getFirst().getSlot() > 10 ) {
-            addressTxCountRepository.deleteAll(byAddressOrderBySlotDesc);
-        }
     }
+
+//    private void processTransaction(long slot, String address) {
+//        Lock lock;
+//        if(addressLocks.containsKey(address)) {
+//            lock = addressLocks.get(address);
+//            lock.lock();
+//        } else {
+//            lock = new ReentrantLock();
+//            lock.lock();
+//            addressLocks.put(address, lock);
+//        }
+//        List<AddressTxCountEntity> byAddressOrderBySlotDesc = addressTxCountRepository.findByAddressOrderByTxCountDesc(address);
+//        if(byAddressOrderBySlotDesc.isEmpty()){
+//            AddressTxCountEntity addressTxCountEntity = AddressTxCountEntity.builder()
+//                    .address(address)
+//                    .txCount(0L)
+//                    .slot(slot)
+//                    .build();
+//            byAddressOrderBySlotDesc.add(addressTxCountEntity);
+//        }
+//        AddressTxCountEntity addressTxCountEntity = byAddressOrderBySlotDesc.getFirst();
+//        addressTxCountEntity.setSlot(slot);
+//        addressTxCountEntity.setTxCount(addressTxCountEntity.getTxCount() + 1);
+//        addressTxCountRepository.save(addressTxCountEntity);
+//
+//        // clean up process
+//        if(slot - byAddressOrderBySlotDesc.getFirst().getSlot() > 10 ) {
+//            addressTxCountRepository.deleteAll(byAddressOrderBySlotDesc);
+//        }
+//        addressLocks.remove(address);
+//        lock.unlock();
+//    }
 
 
     @EventListener

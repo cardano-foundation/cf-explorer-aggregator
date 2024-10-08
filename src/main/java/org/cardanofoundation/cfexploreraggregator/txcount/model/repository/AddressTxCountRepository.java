@@ -9,7 +9,10 @@ import org.cardanofoundation.cfexploreraggregator.txcount.model.entity.AddressTx
 public interface AddressTxCountRepository extends JpaRepository<AddressTxCountEntity, Long> {
 
     List<AddressTxCountEntity> findByAddressOrderBySlotDesc(String address);
+    List<AddressTxCountEntity> findByAddressOrderByTxCountDesc(String address);
 
     void deleteBySlotGreaterThan(long slot);
+
+    void insertOrIncrementValue(@VString address);
 
 }
