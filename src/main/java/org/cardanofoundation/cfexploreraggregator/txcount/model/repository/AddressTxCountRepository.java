@@ -11,5 +11,4 @@ public interface AddressTxCountRepository extends JpaRepository<AddressTxCountEn
     List<AddressTxCountEntity> findByAddressOrderBySlotDesc(String address);
 
     void deleteBySlotGreaterThan(long slot);
-
 }
