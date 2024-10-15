@@ -32,7 +32,7 @@ import org.cardanofoundation.cfexploreraggregator.txcount.model.repository.Addre
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(
-        prefix = "explorer.aggregation",
+        prefix = "explorer.aggregation.modules",
         name = "addressTxCount-enabled",
         havingValue = "true"
 )
@@ -42,16 +42,8 @@ public class AddressTxCountProcessor {
 
     private final ConcurrentHashMap<String, Tuple<Long, Long>> hashCounts = new ConcurrentHashMap<>();
 
-//    private final ScheduledExecutorService dbWriteScheduler = Executors.newScheduledThreadPool(1);
-
-    @Value("${explorer.aggregation.addressTxCount.Safe-Slot-Distance}")
+    @Value("${explorer.aggregation.configuration.addressTxCount.Safe-Slot-Distance}")
     private long safeSlotDistance;
-//
-//    @PostConstruct
-//    private void init() {
-//        // flushing every 10 seconds to the DB
-//        dbWriteScheduler.scheduleAtFixedRate(this::flushToDatabase, 10, 10, TimeUnit.SECONDS);
-//    }
 
     @EventListener
     @Transactional
@@ -118,10 +110,6 @@ public class AddressTxCountProcessor {
         } catch (Exception e) {
             log.error("Error flushing to database");
         }
-
-    }
-
-    private void flushToDatabase() {
 
     }
 

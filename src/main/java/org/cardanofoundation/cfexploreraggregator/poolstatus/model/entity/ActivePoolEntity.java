@@ -25,8 +25,8 @@ public class ActivePoolEntity {
     @GeneratedValue
     private Long id;
 
-    @Column(name = "active_pools", nullable = false)
-    private Integer activePools;
+    @Column(name = "active_pools_count", nullable = false)
+    private Integer activePoolCount;
 
     @Column(name = "epoch", nullable = false)
     private Integer epoch;
