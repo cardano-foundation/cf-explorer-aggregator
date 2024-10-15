@@ -28,7 +28,7 @@ import org.cardanofoundation.cfexploreraggregator.poolstatus.model.repository.Ac
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(
-        prefix = "explorer.aggregation.modules",
+        prefix = "aggregation.modules",
         name = "poolstatus-enabled",
         havingValue = "true"
 )
@@ -38,7 +38,7 @@ public class ActivePoolProcessor {
 
     Map<Integer, Set<String>> activePools = new ConcurrentHashMap<>();
 
-    @Value("${explorer.aggregation.configuration.poolstatus.active-pool-threshold}")
+    @Value("${aggregation.configuration.poolstatus.active-pool-threshold}")
     private int activePoolThreshold;
 
     private final AtomicInteger registrations = new AtomicInteger(0);

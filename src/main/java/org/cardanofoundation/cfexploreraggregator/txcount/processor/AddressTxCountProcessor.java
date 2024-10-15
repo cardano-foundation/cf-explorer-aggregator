@@ -32,7 +32,7 @@ import org.cardanofoundation.cfexploreraggregator.txcount.model.repository.Addre
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(
-        prefix = "explorer.aggregation.modules",
+        prefix = "aggregation.modules",
         name = "addressTxCount-enabled",
         havingValue = "true"
 )
@@ -42,7 +42,7 @@ public class AddressTxCountProcessor {
 
     private final ConcurrentHashMap<String, Tuple<Long, Long>> hashCounts = new ConcurrentHashMap<>();
 
-    @Value("${explorer.aggregation.configuration.addressTxCount.Safe-Slot-Distance}")
+    @Value("${aggregation.configuration.addressTxCount.Safe-Slot-Distance}")
     private long safeSlotDistance;
 
     @EventListener

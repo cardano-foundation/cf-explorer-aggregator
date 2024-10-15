@@ -1,4 +1,3 @@
-
 spring:
     application:
         name: cf-explorer-aggregator
@@ -33,14 +32,13 @@ store:
         use-virtual-thread-for-event-processing: true
 
 ################## Aggregation Configuration ###########
-explorer:
-    aggregation:
-        modules:
-            addressTxCount-enabled: ${AGGREGATOR_ADDRESS_TX_COUNT_ENABLED:false}
-            poolstatus-enabled: ${POOL_STATUS_ENABLED:true}
-        configuration:
-            addressTxCount:
-                Safe-Slot-Distance: 100
-            poolstatus:
-                # Default: A pool must mint at least one block in the last 3 epochs to be considered active
-                active-pool-threshold: ${ACTIVE_POOL_THRESHOLD:3}
+aggregation:
+    modules:
+        addressTxCount-enabled: ${AGGREGATOR_ADDRESS_TX_COUNT_ENABLED:false}
+        poolstatus-enabled: ${POOL_STATUS_ENABLED:true}
+    configuration:
+        addressTxCount:
+            Safe-Slot-Distance: 100
+        poolstatus:
+            # Default: A pool must mint at least one block in the last 3 epochs to be considered active
+            active-pool-threshold: ${ACTIVE_POOL_THRESHOLD:3}

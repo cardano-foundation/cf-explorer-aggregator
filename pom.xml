@@ -14,29 +14,10 @@
     <name>cf-explorer-aggregator</name>
     <description>cf-explorer-aggregator</description>
     <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
     <properties>
         <java.version>21</java.version>
         <yaci-store.version>0.1.0-rc5</yaci-store.version>
         <version.spotless-maven-plugin>2.43.0</version.spotless-maven-plugin>
-
-        <test.exclusions>
-            **/model/**,
-            **/entity/**,
-            **/common/Constants.java,
-        </test.exclusions>
-        <sonar.coverage.exclusions>${test.exclusions}</sonar.coverage.exclusions>
     </properties>
     <dependencies>
         <dependency>
