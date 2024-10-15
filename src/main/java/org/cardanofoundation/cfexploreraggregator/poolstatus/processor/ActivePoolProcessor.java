@@ -17,12 +17,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import com.bloxbean.cardano.yaci.core.model.certs.Certificate;
 import com.bloxbean.cardano.yaci.core.model.certs.CertificateType;
+import com.bloxbean.cardano.yaci.core.model.certs.PoolRegistration;
+import com.bloxbean.cardano.yaci.core.model.certs.PoolRetirement;
 import com.bloxbean.cardano.yaci.store.events.BlockEvent;
 import com.bloxbean.cardano.yaci.store.events.CertificateEvent;
 import com.bloxbean.cardano.yaci.store.events.EpochChangeEvent;
+import com.bloxbean.cardano.yaci.store.events.internal.CommitEvent;
 
 import org.cardanofoundation.cfexploreraggregator.poolstatus.model.entity.ActivePoolEntity;
+import org.cardanofoundation.cfexploreraggregator.poolstatus.model.entity.PoolStatusEntity;
 import org.cardanofoundation.cfexploreraggregator.poolstatus.model.repository.ActivePoolRepository;
+import org.cardanofoundation.cfexploreraggregator.poolstatus.model.repository.PoolRepository;
 
 @Component
 @RequiredArgsConstructor
@@ -35,6 +40,7 @@ import org.cardanofoundation.cfexploreraggregator.poolstatus.model.repository.Ac
 public class ActivePoolProcessor {
 
     private final ActivePoolRepository activePoolRepository;
+    private final PoolRepository poolRepository;
 
     Map<Integer, Set<String>> activePools = new ConcurrentHashMap<>();
 
@@ -42,6 +48,7 @@ public class ActivePoolProcessor {
     private int activePoolThreshold;
 
     private final AtomicInteger registrations = new AtomicInteger(0);
+    private final Map<String, Boolean> poolStatus = new ConcurrentHashMap<>();
 
     @Transactional
     @EventListener
@@ -51,8 +58,13 @@ public class ActivePoolProcessor {
             certificates.forEach(certificate -> {
                 if(certificate.getType() == CertificateType.POOL_REGISTRATION) {
                     registrations.incrementAndGet();
+                    PoolRegistration poolRegistration = (PoolRegistration) certificate;
+                    poolRegistration.getPoolParams().getPoolOwners().forEach(owner -> poolStatus.put(owner, false));
+
                 } else if(certificate.getType() == CertificateType.POOL_RETIREMENT) {
                     registrations.decrementAndGet();
+                    PoolRetirement poolRetirement = (PoolRetirement) certificate;
+                    poolStatus.put(poolRetirement.getPoolKeyHash(), true);
                 }
             });
         });
@@ -72,6 +84,19 @@ public class ActivePoolProcessor {
 
     @Transactional
     @EventListener
+    public void processCommitEvent(CommitEvent commitEvent) {
+        Map<String, Boolean> poolStatusInEpoch = new ConcurrentHashMap<>(this.poolStatus);
+        this.poolStatus.clear();
+        poolStatusInEpoch.entrySet().forEach(entry -> {
+            PoolStatusEntity poolStatusEntity = poolRepository.findByPoolId(entry.getKey()).orElse(PoolStatusEntity.builder().poolId(entry.getKey()).build());
+            poolStatusEntity.setRetired(entry.getValue());
+            poolStatusEntity.setUpdatedSlot(commitEvent.getMetadata().getSlot());
+            poolRepository.save(poolStatusEntity);
+        });
+    }
+
+    @Transactional
+    @EventListener
     public void processEpochEvent(EpochChangeEvent epochChangeEvent) {
         Integer epoch = epochChangeEvent.getEpoch();
         Set<String> activePoolsOverEpoch = new HashSet<>();
@@ -82,8 +107,9 @@ public class ActivePoolProcessor {
 
         activePoolRepository.save(ActivePoolEntity.builder()
                 .activePoolCount(activePoolsOverEpoch.size())
+                .registeredPools(poolRepository.countByRetired(false))
+                .retiredPools(poolRepository.countByRetired(true))
                 .epoch(epoch)
                 .build());
     }
-
 }

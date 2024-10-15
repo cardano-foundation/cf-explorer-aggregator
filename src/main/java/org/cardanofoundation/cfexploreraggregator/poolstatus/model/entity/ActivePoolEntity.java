@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "active_pools")
+@Table(name = "active_pools_agg")
 @Slf4j
 public class ActivePoolEntity {
 
@@ -27,6 +27,12 @@ public class ActivePoolEntity {
 
     @Column(name = "active_pools_count", nullable = false)
     private Integer activePoolCount;
+
+    @Column(name = "registered_pools", nullable = false)
+    private Integer registeredPools;
+
+    @Column(name = "retired_pools", nullable = false)
+    private Integer retiredPools;
 
     @Column(name = "epoch", nullable = false)
     private Integer epoch;
