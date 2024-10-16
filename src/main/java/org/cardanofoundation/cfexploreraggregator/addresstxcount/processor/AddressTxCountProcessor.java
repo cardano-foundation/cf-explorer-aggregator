@@ -76,9 +76,7 @@ public class AddressTxCountProcessor {
                 String stakeAddress = AddressProvider.getStakeAddress(addr).getAddress();
                 addToMap(slot, stakeAddress);
             }
-        } catch (RuntimeException e) {
-            log.error("Error processing utxo address");
-        }
+        } catch (RuntimeException ignored) {}
         addToMap(slot, address);
     }
 

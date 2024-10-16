@@ -103,6 +103,7 @@ public class ActivePoolProcessor {
         for(int i = 0; i <= activePoolThreshold; i++) {
             activePoolsOverEpoch.addAll(this.activePools.getOrDefault(epoch - i, Set.of()));
         }
+        // TODO get this from database to avoid memory loss on restart
         activePools.remove(epoch - activePoolThreshold); // remove old epoch, this won't be taken into account anymore
 
         activePoolRepository.save(ActivePoolEntity.builder()
