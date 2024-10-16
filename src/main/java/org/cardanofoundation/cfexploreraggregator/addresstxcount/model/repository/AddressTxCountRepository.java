@@ -1,10 +1,10 @@
-package org.cardanofoundation.cfexploreraggregator.txcount.model.repository;
+package org.cardanofoundation.cfexploreraggregator.addresstxcount.model.repository;
 
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import org.cardanofoundation.cfexploreraggregator.txcount.model.entity.AddressTxCountEntity;
+import org.cardanofoundation.cfexploreraggregator.addresstxcount.model.entity.AddressTxCountEntity;
 
 public interface AddressTxCountRepository extends JpaRepository<AddressTxCountEntity, Long> {
 
