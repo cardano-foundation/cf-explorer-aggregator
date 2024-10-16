@@ -1,4 +1,4 @@
-package org.cardanofoundation.cfexploreraggregator.txcount.model.entity;
+package org.cardanofoundation.cfexploreraggregator.addresstxcount.model.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

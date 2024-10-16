@@ -7,10 +7,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EntityScan({
-        "org.cardanofoundation.cfexploreraggregator.txcount.model"
+        "org.cardanofoundation.cfexploreraggregator.addresstxcount.model",
+        "org.cardanofoundation.cfexploreraggregator.tokentxcount.model"
 })
 @EnableJpaRepositories({
-        "org.cardanofoundation.cfexploreraggregator.txcount.model"
+        "org.cardanofoundation.cfexploreraggregator.addresstxcount.model",
+        "org.cardanofoundation.cfexploreraggregator.tokentxcount.model"
 })
 public class CfExplorerAggregatorApplication {
 

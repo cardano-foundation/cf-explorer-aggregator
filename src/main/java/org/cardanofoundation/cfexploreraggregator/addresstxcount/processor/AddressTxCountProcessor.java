@@ -1,4 +1,4 @@
-package org.cardanofoundation.cfexploreraggregator.txcount.processor;
+package org.cardanofoundation.cfexploreraggregator.addresstxcount.processor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +25,8 @@ import com.bloxbean.cardano.yaci.store.events.RollbackEvent;
 import com.bloxbean.cardano.yaci.store.events.TransactionEvent;
 import com.bloxbean.cardano.yaci.store.events.internal.CommitEvent;
 
-import org.cardanofoundation.cfexploreraggregator.txcount.model.entity.AddressTxCountEntity;
-import org.cardanofoundation.cfexploreraggregator.txcount.model.repository.AddressTxCountRepository;
+import org.cardanofoundation.cfexploreraggregator.addresstxcount.model.entity.AddressTxCountEntity;
+import org.cardanofoundation.cfexploreraggregator.addresstxcount.model.repository.AddressTxCountRepository;
 
 @Component
 @RequiredArgsConstructor
@@ -42,16 +42,8 @@ public class AddressTxCountProcessor {
 
     private final ConcurrentHashMap<String, Tuple<Long, Long>> hashCounts = new ConcurrentHashMap<>();
 
-//    private final ScheduledExecutorService dbWriteScheduler = Executors.newScheduledThreadPool(1);
-
     @Value("${explorer.aggregation.addressTxCount.Safe-Slot-Distance}")
     private long safeSlotDistance;
-//
-//    @PostConstruct
-//    private void init() {
-//        // flushing every 10 seconds to the DB
-//        dbWriteScheduler.scheduleAtFixedRate(this::flushToDatabase, 10, 10, TimeUnit.SECONDS);
-//    }
 
     @EventListener
     @Transactional
@@ -113,15 +105,9 @@ public class AddressTxCountProcessor {
             addressTxCountRepository.saveAll(entities);
             log.info("Saved {} address tx count entities", entities.size());
 
-            // cleaning DB
-
         } catch (Exception e) {
             log.error("Error flushing to database");
         }
-
-    }
-
-    private void flushToDatabase() {
 
     }
 
