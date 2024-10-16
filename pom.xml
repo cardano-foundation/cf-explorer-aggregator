@@ -73,6 +73,11 @@
             <artifactId>yaci-store-spring-boot-starter</artifactId>
             <version>${yaci-store.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.bloxbean.cardano</groupId>
+            <artifactId>yaci-store-utxo-spring-boot-starter</artifactId>
+            <version>${yaci-store.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
