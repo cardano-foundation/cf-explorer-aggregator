@@ -1,4 +1,4 @@
-package org.cardanofoundation.cfexploreraggregator.txcount.model.entity;
+package org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,20 +17,17 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "address_tx_count")
+@Table(name = "unique_account_agg")
 @Slf4j
-public class AddressTxCountEntity {
+public class UniqueAccountEntity {
 
     @Id
     @GeneratedValue
     private Long id;
 
-    @Column(name = "address", nullable = false)
-    private String address;
+    @Column(name = "unique_accounts", nullable = false)
+    private int uniqueAccounts;
 
-    @Column(name = "tx_count", nullable = false)
-    private Long txCount;
-
-    @Column(name = "slot", nullable = false)
-    private Long slot;
+    @Column(name = "epoch", nullable = false)
+    private int epoch;
 }

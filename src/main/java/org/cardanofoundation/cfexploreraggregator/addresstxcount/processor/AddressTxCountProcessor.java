@@ -1,4 +1,4 @@
-package org.cardanofoundation.cfexploreraggregator.txcount.processor;
+package org.cardanofoundation.cfexploreraggregator.addresstxcount.processor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +15,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.bloxbean.cardano.client.address.Address;
+import com.bloxbean.cardano.client.address.AddressProvider;
+import com.bloxbean.cardano.client.address.AddressType;
 import com.bloxbean.cardano.client.util.Tuple;
 import com.bloxbean.cardano.yaci.core.model.byron.ByronTx;
 import com.bloxbean.cardano.yaci.core.model.byron.ByronTxOut;
@@ -25,8 +28,8 @@ import com.bloxbean.cardano.yaci.store.events.RollbackEvent;
 import com.bloxbean.cardano.yaci.store.events.TransactionEvent;
 import com.bloxbean.cardano.yaci.store.events.internal.CommitEvent;
 
-import org.cardanofoundation.cfexploreraggregator.txcount.model.entity.AddressTxCountEntity;
-import org.cardanofoundation.cfexploreraggregator.txcount.model.repository.AddressTxCountRepository;
+import org.cardanofoundation.cfexploreraggregator.addresstxcount.model.entity.AddressTxCountEntity;
+import org.cardanofoundation.cfexploreraggregator.addresstxcount.model.repository.AddressTxCountRepository;
 
 @Component
 @RequiredArgsConstructor
@@ -39,19 +42,10 @@ import org.cardanofoundation.cfexploreraggregator.txcount.model.repository.Addre
 public class AddressTxCountProcessor {
 
     private final AddressTxCountRepository addressTxCountRepository;
-
     private final ConcurrentHashMap<String, Tuple<Long, Long>> hashCounts = new ConcurrentHashMap<>();
-
-//    private final ScheduledExecutorService dbWriteScheduler = Executors.newScheduledThreadPool(1);
 
     @Value("${explorer.aggregation.addressTxCount.Safe-Slot-Distance}")
     private long safeSlotDistance;
-//
-//    @PostConstruct
-//    private void init() {
-//        // flushing every 10 seconds to the DB
-//        dbWriteScheduler.scheduleAtFixedRate(this::flushToDatabase, 10, 10, TimeUnit.SECONDS);
-//    }
 
     @EventListener
     @Transactional
@@ -61,6 +55,7 @@ public class AddressTxCountProcessor {
             addresses.forEach(address -> processTransaction(event.getMetadata().getSlot(), address));
         });
     }
+
 
     @EventListener
     @Transactional
@@ -75,6 +70,15 @@ public class AddressTxCountProcessor {
     }
 
     private void processTransaction(long slot, String address) {
+        Address addr  = new Address(address);
+        if(addr.getAddressType() == AddressType.Base) {
+            String stakeAddress = AddressProvider.getStakeAddress(addr).getAddress();
+            addToMap(slot, stakeAddress);
+        }
+        addToMap(slot, address);
+    }
+
+    private void addToMap(long slot, String address) {
         hashCounts.merge(address, new Tuple<>(slot, 1L), (longLongTuple, longLongTuple2) -> {
             longLongTuple._1 = Math.max(longLongTuple._1, longLongTuple2._1);
             longLongTuple._2 += longLongTuple2._2;
@@ -88,41 +92,36 @@ public class AddressTxCountProcessor {
         try {
             Map<String, Tuple<Long, Long>> snapshot = new HashMap<>(hashCounts);
             hashCounts.clear();
-            // flush to db
-            List<AddressTxCountEntity> entities = snapshot.entrySet().stream()
-                    .map(entry -> {
-                        List<AddressTxCountEntity> byAddressOrderByTxCountDesc = addressTxCountRepository.findByAddressOrderBySlotDesc(entry.getKey());
-                        long txCount = 0L;
-                        long slot = 0L;
-                        if(!byAddressOrderByTxCountDesc.isEmpty()) {
-                            txCount = byAddressOrderByTxCountDesc.getFirst().getTxCount();
-                            slot = byAddressOrderByTxCountDesc.getFirst().getSlot();
-                        }
-
-                        // Delete old records in save distance
-                        List<AddressTxCountEntity> toBeDeleted = byAddressOrderByTxCountDesc.stream().filter(addressTxCountEntity -> addressTxCountEntity.getSlot() < commitEvent.getMetadata().getSlot() - safeSlotDistance).toList();
-                        addressTxCountRepository.deleteAll(toBeDeleted);
-
-                        return AddressTxCountEntity.builder()
-                                .address(entry.getKey())
-                                .txCount(txCount + entry.getValue()._2)
-                                .slot(Math.max(slot, entry.getValue()._1))
-                                .build();
-                    })
-                    .toList();
-            addressTxCountRepository.saveAll(entities);
-            log.info("Saved {} address tx count entities", entities.size());
-
-            // cleaning DB
-
+            handleAddressAggregation(commitEvent, snapshot);
         } catch (Exception e) {
             log.error("Error flushing to database");
         }
-
     }
 
-    private void flushToDatabase() {
+    private void handleAddressAggregation(CommitEvent commitEvent, Map<String, Tuple<Long, Long>> snapshot) {
+        List<AddressTxCountEntity> entities = snapshot.entrySet().stream()
+                .map(entry -> {
+                    List<AddressTxCountEntity> byAddressOrderByTxCountDesc = addressTxCountRepository.findByAddressOrderBySlotDesc(entry.getKey());
+                    long txCount = 0L;
+                    long slot = 0L;
+                    if(!byAddressOrderByTxCountDesc.isEmpty()) {
+                        txCount = byAddressOrderByTxCountDesc.getFirst().getTxCount();
+                        slot = byAddressOrderByTxCountDesc.getFirst().getSlot();
+                    }
 
+                    // Delete old records in save distance
+                    List<AddressTxCountEntity> toBeDeleted = byAddressOrderByTxCountDesc.stream().filter(addressTxCountEntity -> addressTxCountEntity.getSlot() < commitEvent.getMetadata().getSlot() - safeSlotDistance).toList();
+                    addressTxCountRepository.deleteAll(toBeDeleted);
+
+                    return AddressTxCountEntity.builder()
+                            .address(entry.getKey())
+                            .txCount(txCount + entry.getValue()._2)
+                            .slot(Math.max(slot, entry.getValue()._1))
+                            .build();
+                })
+                .toList();
+        addressTxCountRepository.saveAll(entities);
+        log.info("Saved {} address tx count entities", entities.size());
     }
 
     @EventListener
