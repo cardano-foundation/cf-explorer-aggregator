@@ -35,7 +35,7 @@ import org.cardanofoundation.cfexploreraggregator.addresstxcount.model.repositor
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(
-        prefix = "explorer.aggregation",
+        prefix = "aggregation.modules",
         name = "addressTxCount-enabled",
         havingValue = "true"
 )
@@ -44,7 +44,7 @@ public class AddressTxCountProcessor {
     private final AddressTxCountRepository addressTxCountRepository;
     private final ConcurrentHashMap<String, Tuple<Long, Long>> hashCounts = new ConcurrentHashMap<>();
 
-    @Value("${explorer.aggregation.addressTxCount.Safe-Slot-Distance}")
+    @Value("${aggregation.configuration.addressTxCount.Safe-Slot-Distance}")
     private long safeSlotDistance;
 
     @EventListener
@@ -70,11 +70,13 @@ public class AddressTxCountProcessor {
     }
 
     private void processTransaction(long slot, String address) {
-        Address addr  = new Address(address);
-        if(addr.getAddressType() == AddressType.Base) {
-            String stakeAddress = AddressProvider.getStakeAddress(addr).getAddress();
-            addToMap(slot, stakeAddress);
-        }
+        try {
+            Address addr = new Address(address);
+            if (addr.getAddressType() == AddressType.Base) {
+                String stakeAddress = AddressProvider.getStakeAddress(addr).getAddress();
+                addToMap(slot, stakeAddress);
+            }
+        } catch (RuntimeException ignored) {}
         addToMap(slot, address);
     }
 

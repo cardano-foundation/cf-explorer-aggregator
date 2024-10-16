@@ -30,7 +30,7 @@ import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.repository
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(
-        prefix = "explorer.aggregation",
+        prefix = "aggregation.modules",
         name = "uniqueAccountCount-enabled",
         havingValue = "true"
 )

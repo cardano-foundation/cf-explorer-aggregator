@@ -8,11 +8,13 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EntityScan({
         "org.cardanofoundation.cfexploreraggregator.addresstxcount.model",
-        "org.cardanofoundation.cfexploreraggregator.uniqueaccount.model"
+        "org.cardanofoundation.cfexploreraggregator.uniqueaccount.model",
+        "org.cardanofoundation.cfexploreraggregator.poolstatus.model"
 })
 @EnableJpaRepositories({
         "org.cardanofoundation.cfexploreraggregator.addresstxcount.model",
-        "org.cardanofoundation.cfexploreraggregator.uniqueaccount.model"
+        "org.cardanofoundation.cfexploreraggregator.uniqueaccount.model",
+        "org.cardanofoundation.cfexploreraggregator.poolstatus.model"
 })
 public class CfExplorerAggregatorApplication {
 
