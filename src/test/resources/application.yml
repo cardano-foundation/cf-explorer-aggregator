@@ -9,9 +9,9 @@ spring:
         hibernate:
             ddl-auto: update
     datasource:
-      url: jdbc:${DB_DRIVER:postgresql}://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:exploreragg}?currentSchema=${DB_SCHEMA:exploreragg}
-      username: ${DB_USER:exploreragg}
-      password: ${DB_PASSWORD:exploreragg}
+      url: jdbc:h2:mem:mydb
+      username: sa
+      password: password
 server:
     port: 8080
 

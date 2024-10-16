@@ -70,10 +70,14 @@ public class AddressTxCountProcessor {
     }
 
     private void processTransaction(long slot, String address) {
-        Address addr  = new Address(address);
-        if(addr.getAddressType() == AddressType.Base) {
-            String stakeAddress = AddressProvider.getStakeAddress(addr).getAddress();
-            addToMap(slot, stakeAddress);
+        try {
+            Address addr = new Address(address);
+            if (addr.getAddressType() == AddressType.Base) {
+                String stakeAddress = AddressProvider.getStakeAddress(addr).getAddress();
+                addToMap(slot, stakeAddress);
+            }
+        } catch (RuntimeException e) {
+            log.error("Error processing utxo address");
         }
         addToMap(slot, address);
     }
