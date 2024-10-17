@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import com.bloxbean.cardano.client.address.AddressType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,16 +47,17 @@ public class UniqueAccountProcessor {
     @Transactional
     public void handleTransactionEvent(TransactionEvent event) {
         event.getTransactions().forEach(tx -> tx.getUtxos().forEach(utxo -> {
-            try {
-            Address addr = new Address(utxo.getAddress());
-            if(addr.getDelegationCredential().isEmpty()) {
-                uniqueAccounts.add(utxo.getAddress());
+            if(utxo.getAddress().startsWith("addr") || utxo.getAddress().startsWith("stake")) {
+                Address addr = new Address(utxo.getAddress());
+                if (addr.getAddressType() == AddressType.Base) {
+                    String address = AddressProvider.getStakeAddress(addr).getAddress();
+                    uniqueAccounts.add(address);
+                } else {
+                    uniqueAccounts.add(utxo.getAddress());
+                }
             } else {
-                String address = AddressProvider.getStakeAddress(addr).getAddress();
-                uniqueAccounts.add(address);
-            }
-            } catch (RuntimeException e) {
-                log.error("Error processing utxo address");
+                // Byron Address
+                uniqueAccounts.add(utxo.getAddress());
             }
         }));
     }
@@ -83,7 +85,7 @@ public class UniqueAccountProcessor {
     @Transactional
     public void handleEpochChangeEvent(EpochChangeEvent epochChangeEvent) {
 
-        if(epochChangeEvent.getEpoch() == 0) {
+        if(epochChangeEvent.getPreviousEpoch() == null) {
             return;
         }
         List<AccountInEpochEntity> allByEpoch = addressInEpochRepository.findAllByEpoch(epochChangeEvent.getPreviousEpoch());

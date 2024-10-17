@@ -70,13 +70,13 @@ public class AddressTxCountProcessor {
     }
 
     private void processTransaction(long slot, String address) {
-        try {
+        if(address.startsWith("addr") || address.startsWith("stake")) {
             Address addr = new Address(address);
             if (addr.getAddressType() == AddressType.Base) {
                 String stakeAddress = AddressProvider.getStakeAddress(addr).getAddress();
                 addToMap(slot, stakeAddress);
             }
-        } catch (RuntimeException ignored) {}
+        }
         addToMap(slot, address);
     }
 
