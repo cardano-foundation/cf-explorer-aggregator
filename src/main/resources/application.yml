@@ -19,9 +19,9 @@ server:
 
 store:
     cardano:
-        host: ${CARDANO_NODE_HOST:preprod-node.world.dev.cardano.org}
-        port: ${CARDANO_NODE_PORT:30000}
-        protocol-magic: ${PROTOCOL_MAGIC:1}
+        host: ${CARDANO_NODE_HOST:backbone.mainnet.cardanofoundation.org}
+        port: ${CARDANO_NODE_PORT:3001}
+        protocol-magic: ${PROTOCOL_MAGIC:764824073}
     executor:
         enable-parallel-processing: true
         block-processing-threads: 15
