@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import com.bloxbean.cardano.client.address.AddressType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,15 +16,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import com.bloxbean.cardano.client.address.Address;
 import com.bloxbean.cardano.client.address.AddressProvider;
+import com.bloxbean.cardano.client.address.AddressType;
+import com.bloxbean.cardano.yaci.core.model.byron.ByronTx;
+import com.bloxbean.cardano.yaci.core.model.byron.ByronTxOut;
+import com.bloxbean.cardano.yaci.core.model.byron.payload.ByronTxPayload;
+import com.bloxbean.cardano.yaci.store.events.ByronMainBlockEvent;
 import com.bloxbean.cardano.yaci.store.events.EpochChangeEvent;
 import com.bloxbean.cardano.yaci.store.events.RollbackEvent;
 import com.bloxbean.cardano.yaci.store.events.TransactionEvent;
 import com.bloxbean.cardano.yaci.store.events.internal.CommitEvent;
 
-import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.entity.AccountInEpochEntity;
 import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.entity.UniqueAccountEntity;
-import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.repository.AddressInEpochRepository;
+import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.entity.UniqueAddressesInEpochEntity;
 import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.repository.UniqueAccountRepository;
+import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.repository.UniqueAddressesInEpochRepository;
 
 @Component
 @RequiredArgsConstructor
@@ -38,7 +42,7 @@ import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.repository
 public class UniqueAccountProcessor {
 
     private final UniqueAccountRepository uniqueAccountRepository;
-    private final AddressInEpochRepository addressInEpochRepository;
+    private final UniqueAddressesInEpochRepository uniqueAddressesInEpochRepository;
 
     private final Set<String> uniqueAccounts = new ConcurrentSkipListSet<>();
 
@@ -46,20 +50,34 @@ public class UniqueAccountProcessor {
     @EventListener
     @Transactional
     public void handleTransactionEvent(TransactionEvent event) {
-        event.getTransactions().forEach(tx -> tx.getUtxos().forEach(utxo -> {
-            if(utxo.getAddress().startsWith("addr") || utxo.getAddress().startsWith("stake")) {
-                Address addr = new Address(utxo.getAddress());
-                if (addr.getAddressType() == AddressType.Base) {
-                    String address = AddressProvider.getStakeAddress(addr).getAddress();
-                    uniqueAccounts.add(address);
-                } else {
-                    uniqueAccounts.add(utxo.getAddress());
-                }
+        event.getTransactions().forEach(tx -> tx.getUtxos().forEach(utxo -> processTransaction(utxo.getAddress())));
+    }
+
+    private void processTransaction(String address) {
+        if(address.startsWith("addr") || address.startsWith("stake")) {
+            Address addr = new Address(address);
+            if (addr.getAddressType() == AddressType.Base) {
+                String stakeAddress = AddressProvider.getStakeAddress(addr).getAddress();
+                uniqueAccounts.add(stakeAddress);
             } else {
-                // Byron Address
-                uniqueAccounts.add(utxo.getAddress());
+                uniqueAccounts.add(address);
             }
-        }));
+        } else {
+            // Byron Address
+            uniqueAccounts.add(address);
+        }
+    }
+
+    @EventListener
+    @Transactional
+    public void handleByronEvent(ByronMainBlockEvent event) {
+        List<ByronTx> byronTxList = event.getByronMainBlock().getBody().getTxPayload()
+                .stream()
+                .map(ByronTxPayload::getTransaction).toList();
+        byronTxList.forEach(byronTx -> {
+            List<ByronTxOut> outputs = byronTx.getOutputs();
+            outputs.forEach(output -> processTransaction(output.getAddress().getBase58Raw()));
+        });
     }
 
     @EventListener
@@ -68,16 +86,16 @@ public class UniqueAccountProcessor {
         Set<String> snapshot = new HashSet<>(uniqueAccounts);
         uniqueAccounts.clear();
         snapshot.forEach(address -> {
-            Optional<AccountInEpochEntity> byAddressAndEpoch = addressInEpochRepository.findByAddressAndEpoch(address, commitEvent.getMetadata().getEpochNumber());
-            List<AccountInEpochEntity> accountsInEpoch = new ArrayList<>();
+            Optional<UniqueAddressesInEpochEntity> byAddressAndEpoch = uniqueAddressesInEpochRepository.findByAddressAndEpoch(address, commitEvent.getMetadata().getEpochNumber());
+            List<UniqueAddressesInEpochEntity> accountsInEpoch = new ArrayList<>();
             if(byAddressAndEpoch.isEmpty()) {
-                accountsInEpoch.add(AccountInEpochEntity.builder()
+                accountsInEpoch.add(UniqueAddressesInEpochEntity.builder()
                         .address(address)
                         .epoch(commitEvent.getMetadata().getEpochNumber())
                         .slot(commitEvent.getMetadata().getSlot())
                         .build());
             }
-            addressInEpochRepository.saveAll(accountsInEpoch);
+            uniqueAddressesInEpochRepository.saveAll(accountsInEpoch);
         });
     }
 
@@ -88,8 +106,8 @@ public class UniqueAccountProcessor {
         if(epochChangeEvent.getPreviousEpoch() == null) {
             return;
         }
-        List<AccountInEpochEntity> allByEpoch = addressInEpochRepository.findAllByEpoch(epochChangeEvent.getPreviousEpoch());
-        addressInEpochRepository.deleteAll(allByEpoch);
+        List<UniqueAddressesInEpochEntity> allByEpoch = uniqueAddressesInEpochRepository.findAllByEpoch(epochChangeEvent.getPreviousEpoch());
+        uniqueAddressesInEpochRepository.deleteAll(allByEpoch);
         log.info("Epoch change - Saving {} unique addresses in epoch {}", allByEpoch.size(), epochChangeEvent.getPreviousEpoch());
         UniqueAccountEntity build = UniqueAccountEntity.builder()
                 .epoch(epochChangeEvent.getPreviousEpoch())
@@ -102,7 +120,7 @@ public class UniqueAccountProcessor {
     @Transactional
     public void processRollbackEvent(RollbackEvent rollbackEvent) {
         log.info("Rollback event received. Rolling back transactions to slot {}", rollbackEvent.getRollbackTo().getSlot());
-        addressInEpochRepository.deleteBySlotGreaterThan(rollbackEvent.getRollbackTo().getSlot());
+        uniqueAddressesInEpochRepository.deleteBySlotGreaterThan(rollbackEvent.getRollbackTo().getSlot());
     }
 
 }

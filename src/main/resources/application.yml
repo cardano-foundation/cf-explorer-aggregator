@@ -30,12 +30,14 @@ store:
         blocks-partition-size: 10
         use-virtual-thread-for-batch-processing: true
         use-virtual-thread-for-event-processing: true
+    core:
+        enabled: ${INDEXER_ENABLED:false}
 
 ################## Aggregation Configuration ###########
 aggregation:
     modules:
         addressTxCount-enabled: ${AGGREGATOR_ADDRESS_TX_COUNT_ENABLED:true}
-        poolstatus-enabled: ${POOL_STATUS_ENABLED:true}
+        poolaggregation-enabled: ${POOL_AGGREGATION_ENABLED:true}
         uniqueAccountCount-enabled: ${AGGREGATOR_UNIQUE_ACCOUNT_ENABLED:true}
     configuration:
         addressTxCount:

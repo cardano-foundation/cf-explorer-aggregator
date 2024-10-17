@@ -24,23 +24,23 @@ import com.bloxbean.cardano.yaci.store.events.CertificateEvent;
 import com.bloxbean.cardano.yaci.store.events.EpochChangeEvent;
 import com.bloxbean.cardano.yaci.store.events.internal.CommitEvent;
 
-import org.cardanofoundation.cfexploreraggregator.poolstatus.model.entity.ActivePoolEntity;
+import org.cardanofoundation.cfexploreraggregator.poolstatus.model.entity.PoolAggregationEntity;
 import org.cardanofoundation.cfexploreraggregator.poolstatus.model.entity.PoolStatusEntity;
-import org.cardanofoundation.cfexploreraggregator.poolstatus.model.repository.ActivePoolRepository;
-import org.cardanofoundation.cfexploreraggregator.poolstatus.model.repository.PoolRepository;
+import org.cardanofoundation.cfexploreraggregator.poolstatus.model.repository.PoolAggregationRepository;
+import org.cardanofoundation.cfexploreraggregator.poolstatus.model.repository.PoolStatusRepository;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(
         prefix = "aggregation.modules",
-        name = "poolstatus-enabled",
+        name = "poolaggregation-enabled",
         havingValue = "true"
 )
 public class ActivePoolProcessor {
 
-    private final ActivePoolRepository activePoolRepository;
-    private final PoolRepository poolRepository;
+    private final PoolAggregationRepository poolAggregationRepository;
+    private final PoolStatusRepository poolStatusRepository;
 
     Map<Integer, Set<String>> activePools = new ConcurrentHashMap<>();
 
@@ -88,10 +88,10 @@ public class ActivePoolProcessor {
         Map<String, Boolean> poolStatusInEpoch = new ConcurrentHashMap<>(this.poolStatus);
         this.poolStatus.clear();
         poolStatusInEpoch.entrySet().forEach(entry -> {
-            PoolStatusEntity poolStatusEntity = poolRepository.findByPoolId(entry.getKey()).orElse(PoolStatusEntity.builder().poolId(entry.getKey()).build());
+            PoolStatusEntity poolStatusEntity = poolStatusRepository.findByPoolId(entry.getKey()).orElse(PoolStatusEntity.builder().poolId(entry.getKey()).build());
             poolStatusEntity.setRetired(entry.getValue());
             poolStatusEntity.setUpdatedSlot(commitEvent.getMetadata().getSlot());
-            poolRepository.save(poolStatusEntity);
+            poolStatusRepository.save(poolStatusEntity);
         });
     }
 
@@ -106,10 +106,10 @@ public class ActivePoolProcessor {
         // TODO get this from database to avoid memory loss on restart
         activePools.remove(epoch - activePoolThreshold); // remove old epoch, this won't be taken into account anymore
 
-        activePoolRepository.save(ActivePoolEntity.builder()
-                .activePoolCount(activePoolsOverEpoch.size())
-                .registeredPools(poolRepository.countByRetired(false))
-                .retiredPools(poolRepository.countByRetired(true))
+        poolAggregationRepository.save(PoolAggregationEntity.builder()
+                .activePools(activePoolsOverEpoch.size())
+                .registeredPools(poolStatusRepository.countByRetired(false))
+                .retiredPools(poolStatusRepository.countByRetired(true))
                 .epoch(epoch)
                 .build());
     }
