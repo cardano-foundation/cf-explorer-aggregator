@@ -31,7 +31,7 @@ store:
         use-virtual-thread-for-batch-processing: true
         use-virtual-thread-for-event-processing: true
     core:
-        enabled: ${INDEXER_ENABLED:false}
+        enabled: ${INDEXER_ENABLED:true}
 
 ################## Aggregation Configuration ###########
 aggregation:
