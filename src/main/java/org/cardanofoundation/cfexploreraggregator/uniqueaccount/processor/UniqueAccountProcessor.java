@@ -3,7 +3,6 @@ package org.cardanofoundation.cfexploreraggregator.uniqueaccount.processor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -30,6 +29,7 @@ import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.entity.Uni
 import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.entity.UniqueAddressesInEpochEntity;
 import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.repository.UniqueAccountRepository;
 import org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.repository.UniqueAddressesInEpochRepository;
+import org.cardanofoundation.cfexploreraggregator.utility.AddressUtility;
 
 @Component
 @RequiredArgsConstructor
@@ -54,7 +54,7 @@ public class UniqueAccountProcessor {
     }
 
     private void processTransaction(String address) {
-        if(address.startsWith("addr") || address.startsWith("stake")) {
+        if(AddressUtility.isShelleyAddress(address)) {
             Address addr = new Address(address);
             if (addr.getAddressType() == AddressType.Base) {
                 String stakeAddress = AddressProvider.getStakeAddress(addr).getAddress();
@@ -85,10 +85,11 @@ public class UniqueAccountProcessor {
     public void handleCommitEvent(CommitEvent commitEvent) {
         Set<String> snapshot = new HashSet<>(uniqueAccounts);
         uniqueAccounts.clear();
+        List<UniqueAddressesInEpochEntity> allByEpoch = uniqueAddressesInEpochRepository.findAllByEpoch(commitEvent.getMetadata().getEpochNumber());
         snapshot.forEach(address -> {
-            Optional<UniqueAddressesInEpochEntity> byAddressAndEpoch = uniqueAddressesInEpochRepository.findByAddressAndEpoch(address, commitEvent.getMetadata().getEpochNumber());
+            List<UniqueAddressesInEpochEntity> allByEpochFilter = allByEpoch.stream().filter(uniqueAddressesInEpochEntity -> uniqueAddressesInEpochEntity.getAddress().equals(address)).toList();
             List<UniqueAddressesInEpochEntity> accountsInEpoch = new ArrayList<>();
-            if(byAddressAndEpoch.isEmpty()) {
+            if(allByEpochFilter.isEmpty()) {
                 accountsInEpoch.add(UniqueAddressesInEpochEntity.builder()
                         .address(address)
                         .epoch(commitEvent.getMetadata().getEpochNumber())

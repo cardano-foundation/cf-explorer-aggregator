@@ -30,6 +30,7 @@ import com.bloxbean.cardano.yaci.store.events.internal.CommitEvent;
 
 import org.cardanofoundation.cfexploreraggregator.addresstxcount.model.entity.AddressTxCountEntity;
 import org.cardanofoundation.cfexploreraggregator.addresstxcount.model.repository.AddressTxCountRepository;
+import org.cardanofoundation.cfexploreraggregator.utility.AddressUtility;
 
 @Component
 @RequiredArgsConstructor
@@ -70,7 +71,7 @@ public class AddressTxCountProcessor {
     }
 
     private void processTransaction(long slot, String address) {
-        if(address.startsWith("addr") || address.startsWith("stake")) {
+        if(AddressUtility.isShelleyAddress(address)) {
             Address addr = new Address(address);
             if (addr.getAddressType() == AddressType.Base) {
                 String stakeAddress = AddressProvider.getStakeAddress(addr).getAddress();

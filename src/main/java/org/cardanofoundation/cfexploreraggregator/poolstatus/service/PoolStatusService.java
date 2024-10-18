@@ -32,7 +32,7 @@ public class PoolStatusService {
     }
 
     public PoolAggregationRecord getLatestPoolAggregation() {
-        PoolAggregationEntity latestPoolAggregation = poolAggregationRepository.getLatestPoolAggregation();
+        PoolAggregationEntity latestPoolAggregation = poolAggregationRepository.findTopByOrderByEpochDesc();
         return activePoolMapper.getActivePoolAggregation(latestPoolAggregation);
     }
 
