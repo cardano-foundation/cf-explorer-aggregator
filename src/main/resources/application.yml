@@ -19,9 +19,9 @@ server:
 
 store:
     cardano:
-        host: ${CARDANO_NODE_HOST:preprod-node.world.dev.cardano.org}
-        port: ${CARDANO_NODE_PORT:30000}
-        protocol-magic: ${PROTOCOL_MAGIC:1}
+        host: backbone.mainnet.cardanofoundation.org
+        port: 3001
+        protocol-magic: 764824073
     executor:
         enable-parallel-processing: true
         block-processing-threads: 15
@@ -30,16 +30,18 @@ store:
         blocks-partition-size: 10
         use-virtual-thread-for-batch-processing: true
         use-virtual-thread-for-event-processing: true
+    core:
+        enabled: true
 
 ################## Aggregation Configuration ###########
 aggregation:
     modules:
-        addressTxCount-enabled: ${AGGREGATOR_ADDRESS_TX_COUNT_ENABLED:true}
-        poolstatus-enabled: ${POOL_STATUS_ENABLED:true}
-        uniqueAccountCount-enabled: ${AGGREGATOR_UNIQUE_ACCOUNT_ENABLED:true}
+        addressTxCount-enabled: true
+        poolaggregation-enabled: true
+        uniqueAccountCount-enabled: true
     configuration:
         addressTxCount:
             Safe-Slot-Distance: 100
         poolstatus:
             # Default: A pool must mint at least one block in the last 3 epochs to be considered active
-            active-pool-threshold: ${ACTIVE_POOL_THRESHOLD:3}
+            active-pool-threshold: 3

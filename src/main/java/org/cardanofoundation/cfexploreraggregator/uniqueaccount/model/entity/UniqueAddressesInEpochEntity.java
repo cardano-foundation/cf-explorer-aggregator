@@ -16,9 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "tmp_account_in_epoch")
+@Table(name = "unique_addresses_in_epoch")
 @Slf4j
-public class AccountInEpochEntity {
+public class UniqueAddressesInEpochEntity {
 
     @Id
     @Column(name = "address", nullable = false)

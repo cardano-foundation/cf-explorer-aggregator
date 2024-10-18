@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.cardanofoundation.cfexploreraggregator.poolstatus.model.entity.PoolStatusEntity;
 
-public interface PoolRepository extends JpaRepository<PoolStatusEntity, Long> {
+public interface PoolStatusRepository extends JpaRepository<PoolStatusEntity, Long> {
 
     Optional<PoolStatusEntity> findByPoolId(String poolId);
 

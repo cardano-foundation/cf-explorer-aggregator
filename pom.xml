@@ -18,11 +18,19 @@
         <java.version>21</java.version>
         <yaci-store.version>0.1.0-rc5</yaci-store.version>
         <version.spotless-maven-plugin>2.43.0</version.spotless-maven-plugin>
+        <version.mapstruct>1.5.5.Final</version.mapstruct>
+        <version.lombok>1.18.30</version.lombok>
+        <version.maven-compiler-plugin>3.13.0</version.maven-compiler-plugin>
+        <version.lombok.mapstruct.binding>0.2.0</version.lombok.mapstruct.binding>
     </properties>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <dependency>
@@ -53,6 +61,18 @@
             <groupId>com.bloxbean.cardano</groupId>
             <artifactId>yaci-store-spring-boot-starter</artifactId>
             <version>${yaci-store.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${version.mapstruct}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.0.3</version>
         </dependency>
     </dependencies>
 
@@ -90,6 +110,32 @@
                         <trimTrailingWhitespace/>
                         <endWithNewline/>
                     </java>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${version.maven-compiler-plugin}</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${version.lombok}</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${version.mapstruct}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>${version.lombok.mapstruct.binding}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>

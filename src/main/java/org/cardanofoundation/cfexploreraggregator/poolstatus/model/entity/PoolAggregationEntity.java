@@ -19,14 +19,14 @@ import lombok.extern.slf4j.Slf4j;
 @Entity
 @Table(name = "active_pools_agg")
 @Slf4j
-public class ActivePoolEntity {
+public class PoolAggregationEntity {
 
     @Id
     @GeneratedValue
     private Long id;
 
-    @Column(name = "active_pools_count", nullable = false)
-    private Integer activePoolCount;
+    @Column(name = "active_pools", nullable = false)
+    private Integer activePools;
 
     @Column(name = "registered_pools", nullable = false)
     private Integer registeredPools;
