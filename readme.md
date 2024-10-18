@@ -4,6 +4,16 @@
 This repository implements an aggregator application for the Cardano Foundation Explorer.
 We will use [yaci-store](https://github.com/bloxbean/yaci-store) as a light weight and modular indexer.
 
+## API
+The Aggregator provides an API to retrieve the aggregated data. The following endpoints are available:
+* `GET /addresstxcount` - Returns the number of transactions for all address - Pagination is possible
+* `GET /addresstxcount/{address}` - Returns the number of transactions for a specific address
+* `GET /poolstatus/{poolId}` - Returns the status of a specific pool
+* `GET /poolstatus` - Returns the status of all pools - Pagination is possible
+* `GET /poolstatus/latest` - Returns the latest status of all pools
+
+The Swagger API can be found at `/swagger-ui/index.html`
+
 ### Configuration
 All configurations are in `.env` file. The `cf-explorer-aggregator` allows to configure which aggregator to enable. 
 The following Indexers are currently implemented and are enabled by default:
