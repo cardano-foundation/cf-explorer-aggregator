@@ -1,22 +1,9 @@
-FROM ubuntu:22.04 AS build-common
-
+FROM openjdk:21-jdk-slim as builder
 WORKDIR /build
+COPY . /build
+RUN --mount=type=cache,target=/root/.m2 ./mvnw clean package -DskipTests
 
-RUN apt update --fix-missing \
-    && apt install -y --no-install-recommends openjdk-21-jdk maven curl \
-    && apt clean
-
-COPY ./pom.xml /build/pom.xml
-COPY ./src /build/src
-COPY ./.git .git
-
-RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests
-
-
+FROM openjdk:21-jdk-slim
+COPY --from=builder /build/target/*.jar /app/app.jar
 WORKDIR /app
-RUN cp /build/target/*.jar /app/aggregator.jar
-RUN rm -rf /build
-
-ENTRYPOINT ["java", "-jar",  "/app/aggregator.jar"]
-
-CMD ["/bin/sh", "-c", "bash"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
