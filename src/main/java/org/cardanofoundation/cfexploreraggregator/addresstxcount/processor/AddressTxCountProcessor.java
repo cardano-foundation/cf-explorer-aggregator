@@ -102,9 +102,12 @@ public class AddressTxCountProcessor {
     }
 
     private void handleAddressAggregation(CommitEvent commitEvent, Map<String, Tuple<Long, Long>> snapshot) {
+        List<AddressTxCountEntity> allByAddressIn = addressTxCountRepository.findAllByAddressIn(snapshot.keySet().stream().toList());
+
         List<AddressTxCountEntity> entities = snapshot.entrySet().stream()
                 .map(entry -> {
-                    List<AddressTxCountEntity> byAddressOrderByTxCountDesc = addressTxCountRepository.findByAddressOrderBySlotDesc(entry.getKey());
+                    List<AddressTxCountEntity> byAddressOrderByTxCountDesc = allByAddressIn.stream().filter(addressTxCountEntity -> addressTxCountEntity.getAddress().equals(entry.getKey())).toList();
+
                     long txCount = 0L;
                     long slot = 0L;
                     if(!byAddressOrderByTxCountDesc.isEmpty()) {

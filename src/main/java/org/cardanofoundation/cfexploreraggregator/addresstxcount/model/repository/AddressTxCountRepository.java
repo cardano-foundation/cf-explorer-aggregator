@@ -1,6 +1,7 @@
 package org.cardanofoundation.cfexploreraggregator.addresstxcount.model.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -8,7 +9,9 @@ import org.cardanofoundation.cfexploreraggregator.addresstxcount.model.entity.Ad
 
 public interface AddressTxCountRepository extends JpaRepository<AddressTxCountEntity, Long> {
 
-    List<AddressTxCountEntity> findByAddressOrderBySlotDesc(String address);
+    Optional<AddressTxCountEntity> findTopByAddressOrderBySlotDesc(String address);
+
+    List<AddressTxCountEntity> findAllByAddressIn(List<String> addresses);
 
     void deleteBySlotGreaterThan(long slot);
 }
