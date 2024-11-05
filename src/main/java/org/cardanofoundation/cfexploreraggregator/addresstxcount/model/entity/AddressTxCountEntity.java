@@ -25,7 +25,7 @@ public class AddressTxCountEntity {
     @GeneratedValue
     private Long id;
 
-    @Column(name = "address", nullable = false)
+    @Column(name = "address", nullable = false, columnDefinition = "TEXT")
     private String address;
 
     @Column(name = "tx_count", nullable = false)

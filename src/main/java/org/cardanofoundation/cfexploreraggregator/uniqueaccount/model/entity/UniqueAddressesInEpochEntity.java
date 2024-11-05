@@ -2,6 +2,7 @@ package org.cardanofoundation.cfexploreraggregator.uniqueaccount.model.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -21,7 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 public class UniqueAddressesInEpochEntity {
 
     @Id
-    @Column(name = "address", nullable = false)
+    @GeneratedValue
+    private Long id;
+
+    @Column(name = "address", nullable = false, columnDefinition = "TEXT")
     private String address;
 
     @Column(name = "epoch", nullable = false)
