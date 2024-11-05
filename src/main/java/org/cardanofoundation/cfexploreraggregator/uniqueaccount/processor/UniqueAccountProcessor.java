@@ -3,6 +3,7 @@ package org.cardanofoundation.cfexploreraggregator.uniqueaccount.processor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -85,19 +86,18 @@ public class UniqueAccountProcessor {
     public void handleCommitEvent(CommitEvent commitEvent) {
         Set<String> snapshot = new HashSet<>(uniqueAccounts);
         uniqueAccounts.clear();
-        List<UniqueAddressesInEpochEntity> allByEpoch = uniqueAddressesInEpochRepository.findAllByEpoch(commitEvent.getMetadata().getEpochNumber());
-        snapshot.forEach(address -> {
-            List<UniqueAddressesInEpochEntity> allByEpochFilter = allByEpoch.stream().filter(uniqueAddressesInEpochEntity -> uniqueAddressesInEpochEntity.getAddress().equals(address)).toList();
-            List<UniqueAddressesInEpochEntity> accountsInEpoch = new ArrayList<>();
-            if(allByEpochFilter.isEmpty()) {
-                accountsInEpoch.add(UniqueAddressesInEpochEntity.builder()
-                        .address(address)
-                        .epoch(commitEvent.getMetadata().getEpochNumber())
-                        .slot(commitEvent.getMetadata().getSlot())
-                        .build());
-            }
-            uniqueAddressesInEpochRepository.saveAll(accountsInEpoch);
-        });
+        // Getting all addresses in the current epoch and removing them from the snapshot
+        uniqueAddressesInEpochRepository.findAllByEpochAndAddressIn(commitEvent.getMetadata().getEpochNumber(), snapshot)
+                .forEach(uniqueAddressesInEpochEntity -> snapshot.remove(uniqueAddressesInEpochEntity.getAddress()));
+
+        // add the remaining addresses from the snapshot to the current epoch
+        List<UniqueAddressesInEpochEntity> accountsInEpoch = new ArrayList<>();
+        snapshot.forEach(address -> accountsInEpoch.add(UniqueAddressesInEpochEntity.builder()
+                .address(address)
+                .epoch(commitEvent.getMetadata().getEpochNumber())
+                .slot(commitEvent.getMetadata().getSlot())
+                .build()));
+        uniqueAddressesInEpochRepository.saveAll(accountsInEpoch);
     }
 
     @EventListener

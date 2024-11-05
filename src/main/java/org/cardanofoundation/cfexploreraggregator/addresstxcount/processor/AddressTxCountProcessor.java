@@ -102,22 +102,24 @@ public class AddressTxCountProcessor {
     }
 
     private void handleAddressAggregation(CommitEvent commitEvent, Map<String, Tuple<Long, Long>> snapshot) {
-        List<AddressTxCountEntity> allByAddressIn = addressTxCountRepository.findAllByAddressIn(snapshot.keySet().stream().toList());
+        List<AddressTxCountEntity> allAddressEntitiesFromSnapshot = addressTxCountRepository.findAllByAddressInOrderBySlotDesc(snapshot.keySet());
 
         List<AddressTxCountEntity> entities = snapshot.entrySet().stream()
                 .map(entry -> {
-                    List<AddressTxCountEntity> byAddressOrderByTxCountDesc = allByAddressIn.stream().filter(addressTxCountEntity -> addressTxCountEntity.getAddress().equals(entry.getKey())).toList();
+                    List<AddressTxCountEntity> allEntitiesForAddress = allAddressEntitiesFromSnapshot.stream()
+                            .filter(addressTxCountEntity -> addressTxCountEntity.getAddress().equals(entry.getKey())).toList();
 
                     long txCount = 0L;
                     long slot = 0L;
-                    if(!byAddressOrderByTxCountDesc.isEmpty()) {
-                        txCount = byAddressOrderByTxCountDesc.getFirst().getTxCount();
-                        slot = byAddressOrderByTxCountDesc.getFirst().getSlot();
+                    if(!allEntitiesForAddress.isEmpty()) {
+                        txCount = allEntitiesForAddress.getFirst().getTxCount();
+                        slot = allEntitiesForAddress.getFirst().getSlot();
                     }
 
                     // Delete old records in save distance
-                    List<AddressTxCountEntity> toBeDeleted = byAddressOrderByTxCountDesc.stream().filter(addressTxCountEntity -> addressTxCountEntity.getSlot() < commitEvent.getMetadata().getSlot() - safeSlotDistance).toList();
-                    addressTxCountRepository.deleteAll(toBeDeleted);
+                    List<AddressTxCountEntity> addressEntitiesInSafeDistance = allEntitiesForAddress.stream()
+                            .filter(addressTxCountEntity -> addressTxCountEntity.getSlot() < commitEvent.getMetadata().getSlot() - safeSlotDistance).toList();
+                    addressTxCountRepository.deleteAll(addressEntitiesInSafeDistance);
 
                     return AddressTxCountEntity.builder()
                             .address(entry.getKey())
