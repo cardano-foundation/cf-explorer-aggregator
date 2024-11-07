@@ -31,6 +31,11 @@ public class PoolStatusService {
         return byPoolId.map(poolStatusMapper::getPoolStatusRecord);
     }
 
+    public Optional<PoolAggregationRecord> getPoolStatusByEpoch(int epoch) {
+        Optional<PoolAggregationEntity> byEpoch = poolAggregationRepository.findByEpoch(epoch);
+        return byEpoch.map(activePoolMapper::getActivePoolAggregation);
+    }
+
     public PoolAggregationRecord getLatestPoolAggregation() {
         PoolAggregationEntity latestPoolAggregation = poolAggregationRepository.findTopByOrderByEpochDesc();
         return activePoolMapper.getActivePoolAggregation(latestPoolAggregation);
