@@ -63,15 +63,15 @@ public class PoolStatusController {
     }
 
     @GetMapping("/poolstatus/epoch/{epoch}")
-    @Operation(summary = "Pool Status by Epoch",
-            description = "Get the pool status by epoch")
-    @ApiResponse(responseCode = "200", description = "Pool status by epoch found",
+    @Operation(summary = "Pool Aggregation by Epoch",
+            description = "Get the pool aggregation by epoch")
+    @ApiResponse(responseCode = "200", description = "Pool aggregation by epoch found",
             content = {@Content(mediaType = "application/json",
                     schema = @Schema(implementation = PoolAggregationRecord.class))})
-    @ApiResponse(responseCode = "404", description = "Pool status by epoch not found",
+    @ApiResponse(responseCode = "404", description = "Pool aggregation by epoch not found",
     content = {@Content(schema = @Schema())})
-    public ResponseEntity<PoolAggregationRecord> getPoolStatusByEpoch(@PathVariable int epoch) {
-        Optional<PoolAggregationRecord> poolStatusByEpoch = poolStatusService.getPoolStatusByEpoch(epoch);
+    public ResponseEntity<PoolAggregationRecord> getPoolAggregationByEpoch(@PathVariable int epoch) {
+        Optional<PoolAggregationRecord> poolStatusByEpoch = poolStatusService.getPoolAggregationByEpoch(epoch);
         return poolStatusByEpoch.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
